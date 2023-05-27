@@ -2,6 +2,10 @@
 This is a Todolist APP. 
 Database: [mongodb atalas](https://cloud.mongodb.com/v2/6454c12558a967594bc25391#/metrics/replicaSet/6454c2275811954f1c29705f/explorer/todolistDB/lists/find)
 
+# Screenshot
+<img src="todolist.jpg" alt="todolist">
+---
+
 deploy:
 [glitch](https://defiant-brawny-stag.glitch.me/)
 
