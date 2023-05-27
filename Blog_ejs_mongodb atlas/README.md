@@ -1,7 +1,12 @@
 # Blog website with database
 This is a blog website with MongoDB database. 
 
-Tech:
+# Screenshot
+<img src="screenshot/blog.jpg" alt="blog" >
+
+---
+
+### Tech:
 - NoSQL database technology: **MongoDB**
   - **mongoose**
   - [mongodb atalas](https://cloud.mongodb.com/v2/6454c12558a967594bc25391#/clusters/detail/Cluster0)
