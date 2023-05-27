@@ -4,7 +4,7 @@ A Dating app for dog
 
 ---
 # Screenshot
-<img src="TinDog-bootstrap/screenshot/tindog.gif" alt="tindog">
+<img src="screenshot/tindog.gif" alt="tindog">
 
 ---
 
