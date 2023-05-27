@@ -23,8 +23,6 @@ Add link/script in`<head>`section
 
 # Components:
 1. nav bar
-<img src="./appimage/1.gif">
-<img src="./appimage/navbar2.png">
 - container:`<div></div>`&`class= "container-fluid"`
 - list,button,anchor tag
 - **responsive**:
