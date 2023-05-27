@@ -2,7 +2,7 @@
 This is a blog website with MongoDB database. 
 
 # Screenshot
-<img src="screenshot/blog.jpg" alt="blog" >
+<img src="blog.jpg" alt="blog" >
 
 ---
 
