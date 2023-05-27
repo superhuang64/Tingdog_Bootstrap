@@ -3,7 +3,7 @@ This is a drum kit player.
 Tech:js-DOM
 
 ---
-#Screenshot
+# Screenshot
 <img src="screenshot/drum_kit.gif" alt="drum kit" >
 
 ---
