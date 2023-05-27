@@ -1,0 +1,12 @@
+{
+  "name": "tindog-bootstrap",
+  "version": "1.0.0",
+  "description": "A Dating app for dog Tech:bootstrap - navbar:collapse/spacing - grid system+ break points - carousel:silde,control part - image rotate, position - insert icon from fontawsome toy button, and change style",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
