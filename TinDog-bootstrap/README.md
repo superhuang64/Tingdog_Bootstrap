@@ -1,6 +1,6 @@
 
-# Web Development/ TinDog
-A Dating app for dog
+# TinDog
+This is TinDog website. 
 
 ---
 # Screenshot
