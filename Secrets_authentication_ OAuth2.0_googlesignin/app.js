@@ -1,5 +1,4 @@
 //jshint esversion:6
-
 require('dotenv').config();
 const express = require("express");
 const flash = require("express-flash");
@@ -15,6 +14,7 @@ const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
 const LocalStrategy = require('passport-local').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
 const findOrCreate = require('mongoose-findorcreate');
 
 const env = require("dotenv").config();
@@ -30,7 +30,7 @@ app.use(express.static("public"));
 app.use(session({
     secret: 'Our little secret.',
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: false
 }));
 
 app.use(passport.initialize());
@@ -51,7 +51,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         unique: true
     },
-    secret: String
+    secret: String,
+    username: { type: String, unique: false, sparse: true }
 });
 
 userSchema.plugin(passportLocalMongoose);
@@ -63,47 +64,61 @@ const User = mongoose.model("User", userSchema);
 
 passport.use(User.createStrategy());
 
-passport.serializeUser(function (user, done) {
-    done(null, user.id);
-});
-passport.deserializeUser(async function (id, done) {
-    let err, user;
-    try {
-        user = await User.findById(id).exec();
-    }
-    catch (e) {
-        err = e;
-    }
-    done(err, user);
-});
-
 // passport.serializeUser(function (user, done) {
-//     process.nextTick(function () {
-//         done(null, { id: user.id });
-//     });
+//     done(null, user.id);
+// });
+// passport.deserializeUser(async function (id, done) {
+//     let err, user;
+//     try {
+//         user = await User.findById(id).exec();
+//     }
+//     catch (e) {
+//         err = e;
+//     }
+//     done(err, user);
 // });
 
-// passport.deserializeUser(async function (user, done) {
+passport.serializeUser(function (user, cb) {
+    process.nextTick(function () {
+        return cb(null, {
+            id: user.id,
+            username: user.username,
+            picture: user.picture
+        });
+    });
+});
 
-//     process.nextTick(function () {
-//         return done(null, user);
-//     });
-// });
+passport.deserializeUser(function (user, cb) {
+    process.nextTick(function () {
+        return cb(null, user);
+    });
+});
 
 passport.use(new GoogleStrategy({
-    clientID: process.env.CLIENT_ID,
-    clientSecret: process.env.CLIENT_SECRET,
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: "http://localhost:3000/auth/google/secrets",
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
-},
-    function (accessToken, refreshToken, profile, cb) {
-        User.findOrCreate({ username: profile.displayName, googleId: profile.id }, function (err, user) {
-            return cb(err, user);
-        });
+}, function (accessToken, refreshToken, profile, cb) {
+    User.findOrCreate({ username: profile.displayName, googleId: profile.id }, function (err, user) {
+        return cb(err, user);
+    });
 
-    }
+}
 ));
 
+passport.use(new FacebookStrategy({
+    clientID: process.env.FACEBOOK_CLIENT_ID,
+    clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/facebook/secrets",
+    profileFields: ['id', 'displayName', 'email']
+}, function (accessToken, refreshToken, profile, cb) {
+    User.findOrCreate({ username: profile.displayName, facebookId: profile.id }, function (err, user) {
+        return cb(err, user);
+    });
+
+}
+));
 //-------home
 
 app.get("/", function (req, res) {
@@ -144,9 +159,9 @@ app.route("/register")
 
     .post(function (req, res) {
         //Authenticate the user- passportlocalmongoose
-        User.register({ username: req.body.username, active: false }, req.body.password, function (err, user) {
+        User.register({ username: req.body.username }, req.body.password, function (err, user) {
             if (err) {
-                req.flash('error', err.message);
+                console.log(err);
                 res.redirect("/register");
             } else {
                 //setup the login session for the authenticated user- passport
@@ -172,28 +187,36 @@ app.get('/logout', function (req, res, next) {
 app.get('/auth/google',
     passport.authenticate('google', { scope: ['profile'] }));
 
-//-------/auth/google/secrets
-
 app.get('/auth/google/secrets',
     passport.authenticate('google', { failureRedirect: '/login' }),
     function (req, res) {
-        res.render("secrets");
+        res.redirect("/secrets");
+    }
+);
+
+//-------/auth/facebook
+//allow users to log in with their Facebook account.
+app.get('/auth/facebook',
+    passport.authenticate('facebook'))
+
+app.get('/auth/facebook/secrets',
+    passport.authenticate('facebook', { failureRedirect: '/login' }),
+    function (req, res) {
+        res.redirect("/secrets");
     }
 );
 
 //-------secrets
 
-app.get("/secrets", function (req, res) {
-
-    User.find({ "secret": { $ne: null } })
-        .then((foundUsers) => {
-            res.render("secrets", { usersWithSecrets: foundUsers });
-        })
-        .catch((err) => {
-            console.log("err");
-        });
-
+app.get("/secrets", async function (req, res) {
+    try {
+        const foundUsers = await User.find({ "secret": { $ne: null } });
+        res.render("secrets", { usersWithSecrets: foundUsers });
+    } catch (error) {
+        console.log(err);
+    }
 });
+
 
 //-------submit
 
@@ -211,13 +234,14 @@ app.route("/submit")
     .post(async function (req, res) {
         if (req.isAuthenticated()) {
             const submittedSecret = req.body.secret;
-            const user = await User.findById(req.user._id).exec();
+            const user = await User.findById(req.user.id).exec();
             //.exec()-- from Mongoose API, when retrive and find it.
             user.secret = submittedSecret;
             await user.save().then(() => res.redirect("/secrets"));
             return;
+        } else {
+            res.redirect("/login");
         }
-        res.redirect("/login");
     });
 
 
